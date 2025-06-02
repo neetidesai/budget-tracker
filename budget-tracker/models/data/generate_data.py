@@ -36,9 +36,10 @@ avg_spend = {
 }
 
 def generate_transaction(user_id, date):
-    category = random.choice(list(categories.keys()))
+    category = random.choice([cat for cat in categories.keys() if cat != "Rent"])
     vendor = random.choice(categories[category])
     avg_min, avg_max = avg_spend[category]
+
     # Assume 5-20 transactions per month per category
     num_tx = random.randint(5, 20)
     amount = round(np.random.normal((avg_min + avg_max) / 2 / num_tx, 5), 2)
@@ -51,6 +52,19 @@ def generate_transaction(user_id, date):
         "amount": amount,
     }
 
+def generate_rent_transaction(user_id, month):
+    category = "Rent"
+    vendor = random.choice(categories[category])
+    avg_min, avg_max = avg_spend[category]
+    amount = round(np.random.uniform(avg_min, avg_max), 2)  # Rent is a fixed monthly payment
+    return {
+        "user_id": user_id,
+        "date": f"2024-{month:02d}-01",  # Rent is paid on the first of the month
+        "category": category,
+        "vendor": vendor,
+        "amount": amount,
+    }
+
 def generate_monthly_data(year, month, num_days):
     data = []
     # generate data for each day of the month
@@ -58,6 +72,10 @@ def generate_monthly_data(year, month, num_days):
         # generate data for each user
         for user in range(0, 1000):
             date = f"{year}-{month:02d}-{day:02d}"
+            if day == 1:
+                rent_tx = generate_rent_transaction(user, month)
+                data.append(rent_tx)
+            
             # Random number of transactions per day
             transactions_per_day = random.randint(0, 10)
             for _ in range(transactions_per_day):
