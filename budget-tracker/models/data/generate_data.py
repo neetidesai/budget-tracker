@@ -5,6 +5,10 @@ import random
 
 fake = Faker()
 
+# Assign spending levels to users
+spending_levels = ["low", "medium", "high"]
+user_spending_levels = {user_id: random.choice(spending_levels) for user_id in range(1000)}
+
 # Spending categories and some example vendors per category
 categories = {
     "Groceries": ["Whole Foods", "Trader Joe's", "Market Basket", "Walmart", "Stop & Shop"],
@@ -22,23 +26,54 @@ categories = {
 
 # Average monthly spending ranges per category (in USD)
 avg_spend = {
-    "Groceries": (200, 500),
-    "Dining": (100, 400),
-    "Travel": (50, 500),
-    "Entertainment": (50, 200),
-    "Utilities": (100, 500),
-    "Healthcare": (30, 150),
-    "Rent": (1000, 2500),
-    "Shopping": (100, 500),
-    "Education": (20, 300),
-    "Personal Care": (30, 300),
-    "Miscellaneous": (10, 200)
+    "low": {
+        "Groceries": (50, 200),
+        "Dining": (0, 100),
+        "Travel": (0, 150),
+        "Entertainment": (0, 50),
+        "Utilities": (0, 50),
+        "Healthcare": (0, 150),
+        "Rent": (1000, 1500),
+        "Shopping": (50, 100),
+        "Education": (0, 150),
+        "Personal Care": (0, 50),
+        "Miscellaneous": (0, 100)
+    },
+    "medium": {
+        "Groceries": (201, 400),
+        "Dining": (101, 300),
+        "Travel": (151, 400),
+        "Entertainment": (51, 200),
+        "Utilities": (51, 150),
+        "Healthcare": (151, 300),
+        "Rent": (1501, 2200),
+        "Shopping": (101, 250),
+        "Education": (151, 300),
+        "Personal Care": (51, 200),
+        "Miscellaneous": (101, 200)
+    },
+    "high": {
+        "Groceries": (401, 600),
+        "Dining": (301, 600),
+        "Travel": (401, 2000),
+        "Entertainment": (201, 500),
+        "Utilities": (151, 300),
+        "Healthcare": (301, 1000),
+        "Rent": (2201, 5000),
+        "Shopping": (251, 3000),
+        "Education": (301, 5000),
+        "Personal Care": (201, 600),
+        "Miscellaneous": (201, 1000)
+    }
 }
 
 def generate_transaction(user_id, date):
+    spending_level = user_spending_levels[user_id]
+
+    # Randomly choose a category and vendor, avoiding "Rent" for daily transactions
     category = random.choice([cat for cat in categories.keys() if cat != "Rent"])
     vendor = random.choice(categories[category])
-    avg_min, avg_max = avg_spend[category]
+    avg_min, avg_max = avg_spend[spending_level][category]
 
     # Assume 5-20 transactions per month per category
     num_tx = random.randint(5, 20)
@@ -55,7 +90,9 @@ def generate_transaction(user_id, date):
 def generate_rent_transaction(user_id, month):
     category = "Rent"
     vendor = random.choice(categories[category])
-    avg_min, avg_max = avg_spend[category]
+    spending_level = user_spending_levels[user_id]
+    
+    avg_min, avg_max = avg_spend[spending_level][category]
     amount = round(np.random.uniform(avg_min, avg_max), 2)  # Rent is a fixed monthly payment
     return {
         "user_id": user_id,
